@@ -1,9 +1,6 @@
 # County Health Access
 
-This project uses CDC PLACES county-level data to compare a composite
-
-**access barrier score** against a composite **disease burden score** across 2,299
-US counties.
+This project uses CDC PLACES county-level data to compare a composite access barrier score against a composite disease burden score across 2,299 US counties.
 
 **Key finding:** the two are strongly associated (r = 0.81). In the quartile of counties
 facing the most barriers, adults are 1.8x as likely to be uninsured and 1.6x as likely
@@ -14,6 +11,14 @@ to report poor general health as in the quartile facing the fewest.
 **CDC PLACES: County Data (GIS Friendly Format), 2025 release**
 Centers for Disease Control and Prevention, Division of Population Health.
 Downloaded from https://data.cdc.gov
+
+3,143 counties, 167 columns, 40 health measures. Each measure appears as a crude rate,
+an age-adjusted rate, and two confidence limits.
+
+These are model-based estimates, not direct measurements. The CDC produced them from
+BRFSS 2023 and 2022 survey data which was combined with Census Bureau 2023 population estimates
+and ACS 2019-2023 estimates. Some counties were never surveyed directly; their values
+are predicted from demographic profiles.
 
 Raw file: `data/raw/places_county_2025.csv`
 
@@ -27,8 +32,10 @@ python src/make_figures.py    # -> figures/*.png
 ```
 
 ## Limitations
-- **Two entire states are missing.** All 120 Kentucky counties and all 67 Pennsylvania
-  counties have no estimates for any measure. This could impact the national average depending on what the average in those states looks like.
-- **The newest measures have the worst coverage.** The seven social-determinant measures
+- Two entire states are missing. All 120 Kentucky counties and all 67 Pennsylvania
+  counties have no estimates for any measure. This could impact the national average depending on what the average in those states looks like. Kentucky specifically, has among the highest chronic disease rates in the country, so excluding it likely makes national patterns look better than they are.
+- The newest measures have the worst coverage. The seven social-determinant measures
   (food insecurity, housing insecurity, transportation, and others) are missing for 844
-  counties, while the 33 established health measures are missing for only 187. The barrier score uses three of measures so the analysis only covers 2,299 of 3,143 counties.
+  counties, while the 33 established health measures are missing for only 187. The barrier score uses three of these measures so the analysis only covers 2,299 of 3,143 counties.
+- From the analysis we can say that these are associations not causes. The "PLACES" estimates comes
+  from a model that uses demographic and socioeconomic inputs, so part of the relationship between access and disease is built in by construction.
