@@ -17,7 +17,7 @@ def figure_scatter(df):
     r = df["access_barrier_score"].corr(df["disease_burden_score"])
     ax.set_title("Counties with more barriers to get care have more chronic disease", fontsize=12, fontweight="bold", loc="left", pad=40)
     ax.text(0, 1.03,
-            f"Each dot is one US county(n = {len(df):,}).correlation r = {r:.2f}.",
+            f"Each dot is one US county (n = {len(df):,}). correlation r = {r:.2f}.",
             transform=ax.transAxes, fontsize=10, color=muted)
 
     ax.set_xlabel("Access barrier score (higher = harder to get care)", fontsize=10, color=muted)
@@ -33,18 +33,20 @@ def figure_scatter(df):
 
 #Figure 2
 def figure_quartiles(df):
-    outcomes = ["uninsured", "diabetes", "poor_health"]
+    outcomes = ["heart_disease", "diabetes", "poor_health", "high_blood_pressure", "obesity"]
     order = ["fewest barriers", "some", "many", "most barriers"]
     med = df.groupby("barrier_quartile", observed=True)[outcomes].median()
     med = med.reindex(order)
 
-    med = med.rename(columns={"uninsured": "Uninsured",
-                                  "diabetes": "Diabetes",
-                                  "poor_health": "Poor general health"})
+    med = med.rename(columns={"heart_disease": "Heart disease",
+                                "diabetes": "Diabetes",
+                                "poor_health": "Poor general health",
+                                "high_blood_pressure": "High blood pressure",
+                                "obesity": "Obesity"})
 
     ax = med.T.plot(kind="bar", figsize=(9, 5.5),
                     color=quartile_colors, rot=0)
-    ax.set_title("Every outcome worsens as barriers to care rise\n"
+    ax.set_title("Every chronic-disease measure gets worse as barriers to care rise\n"
                  "Median % of adults, by county barrier quartile")
     ax.set_ylabel("% of adults")
     ax.legend(frameon=False, ncol=4)
@@ -71,13 +73,34 @@ def figure_population(df):
                       dpi=200, bbox_inches="tight")
     plt.close(ax.figure)
 
+#Figure 4
+def figure_states(df):
+    per_state = df.groupby("StateAbbr").size()
+    top = df[df["barrier_quartile"] == "most barriers"].groupby("StateAbbr").size()
+    share = (top / per_state).fillna(0) * 100
+    share = share[per_state >= 10].sort_values(ascending=False).head(10)
+
+    ax = share.plot(kind="barh", figsize=(9, 5), color="#1E3A8A")
+    ax.bar_label(ax.containers[0], fmt="{:.0f}%", padding=4, fontweight="bold")
+
+    ax.set_title("The highest-barrier counties cluster in the South\n"
+                 "Share of each state's counties in the 'most barriers' quartile (top 10 states)")
+    ax.set_xlabel("% of the state's counties")
+    ax.set_ylabel("")
+    ax.invert_yaxis()
+
+    ax.figure.savefig(figdir / "04_top_quartile_by_state.png",
+                      dpi=200, bbox_inches="tight")
+    plt.close(ax.figure)
+
 def main():
     figdir.mkdir(exist_ok=True)
     df = pd.read_csv(source)
     figure_scatter(df)
     figure_quartiles(df)
     figure_population(df)
-    print(f"wrote 3 figures to {figdir}")
+    figure_states(df)
+    print(f"wrote 4 figures to {figdir}")
 
 if __name__ == "__main__":
     main()

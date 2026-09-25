@@ -1,5 +1,4 @@
-# Measurements are done differently and come from different scales so it is converted to a z-score
-# and averaged within its group 
+# Measurements are done differently and come from different scales so it is converted to a z-score and averaged within its group 
 
 from pathlib import Path
 import pandas as pd
