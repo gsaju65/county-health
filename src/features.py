@@ -7,10 +7,12 @@ import pandas as pd
 source = Path("data/processed/county_health.csv")
 out = Path("data/processed/county_features.csv")
 
-barriers = ["uninsured", "no_checkup", "no_dental", "lacks_transportation", 
+barriers = ["uninsured", "no_dental", "lacks_transportation", 
             "food_insecurity", "housing_insecurity"]
 
 outcomes = ["diabetes", "high_blood_pressure", "heart_disease", "obesity", "poor_health"]
+
+quartile_labels = ["fewest barriers", "some", "many", "most barriers"]
 
 def zscore(s):
     return (s - s.mean()) / s.std()
@@ -18,23 +20,21 @@ def zscore(s):
 def main():
     df = pd.read_csv(source)
 
-    df["no_checkup"] = 100 - df["had_checkup"]
     df["no_dental"] = 100 - df["dental_visit"]
 
     df["access_barrier_score"] = df[barriers].apply(zscore).mean(axis=1)
     df["disease_burden_score"] = df[outcomes].apply(zscore).mean(axis=1)
 
-    df["barrier_quartile"] = pd.qcut(
-        df["access_barrier_score"], 4,
-        labels=["fewest barriers", "some", "many", "most barriers"]
-    )
+    df["barrier_quartile"] = pd.qcut(df["access_barrier_score"], 4, labels=quartile_labels)
 
     r = df["access_barrier_score"].corr(df["disease_burden_score"])
     print(f"correlation between barriers and disease burden: r = {r:.3f}")
     print()
-    print(df.groupby("barrier_quartile", observed=True)[
-        ["uninsured", "diabetes", "high_blood_pressure", "poor_health", "TotalPopulation"]
-    ].median().round(1).to_string())
+    med = df.groupby("barrier_quartile", observed=True)[outcomes + ["TotalPopulation"]].median()
+    print(med.round(1).to_string())
+    print()
+    print("most-barriers / fewest-barriers ratio of the medians:")
+    print((med.loc["most barriers"] / med.loc["fewest barriers"]).round(2).to_string())
 
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
